@@ -1,0 +1,85 @@
+From 890f2da66187c2bdde544a95e756e3d6cc5b1cdd Mon Sep 17 00:00:00 2001
+From: "mohammadmujahiddingit config --global user.email
+ mohammadmujahiddin01@outlook.com" <mohammadmujahiddin01@outlook.com>
+Date: Mon, 11 Dec 2023 12:11:52 +0530
+Subject: [PATCH] Done
+
+---
+ client3.py     | 16 +++++++++++++---
+ client_test.py | 10 ++++++++++
+ 2 files changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/client3.py b/client3.py
+index 3fc09b7..676fbd4 100644
+--- a/client3.py
++++ b/client3.py
+@@ -35,25 +35,35 @@ def getDataPoint(quote):
+     stock = quote['stock']
+     bid_price = float(quote['top_bid']['price'])
+     ask_price = float(quote['top_ask']['price'])
+-    price = bid_price
++    price = (bid_price + ask_price) / 2  # Update to use the average of bid and ask prices
+     return stock, bid_price, ask_price, price
+ 
+ 
+ def getRatio(price_a, price_b):
+     """ Get ratio of price_a and price_b """
+     """ ------------- Update this function ------------- """
+-    return 1
++    if price_b == 0:  # Avoid division by zero
++        return None
++    return price_a / price_b
+ 
+ 
+ # Main
+ if __name__ == "__main__":
+     # Query the price once every N seconds.
++    prices = {}  # Dictionary to store stock prices
++
+     for _ in iter(range(N)):
+         quotes = json.loads(urllib.request.urlopen(QUERY.format(random.random())).read())
+ 
+         """ ----------- Update to get the ratio --------------- """
+         for quote in quotes:
+             stock, bid_price, ask_price, price = getDataPoint(quote)
++            prices[stock] = price  # Store the stock price in the dictionary
+             print("Quoted %s at (bid:%s, ask:%s, price:%s)" % (stock, bid_price, ask_price, price))
+ 
+-        print("Ratio %s" % getRatio(price, price))
++        # Calculate and print the ratio for the last two quotes
++        if len(prices) > 1:
++            stock_a, stock_b = list(prices.keys())[-2], list(prices.keys())[-1]
++            price_a, price_b = prices[stock_a], prices[stock_b]
++            ratio = getRatio(price_a, price_b)
++            print("Ratio %s" % ratio)
+diff --git a/client_test.py b/client_test.py
+index af2bf26..61580a1 100644
+--- a/client_test.py
++++ b/client_test.py
+@@ -8,6 +8,11 @@ class ClientTest(unittest.TestCase):
+       {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
+     ]
+     """ ------------ Add the assertion below ------------ """
++    # Call getDataPoint for each quote and assert the returned tuple
++    for quote in quotes:
++            stock, bid_price, ask_price, price = getDataPoint(quote)
++            self.assertEqual((stock, bid_price, ask_price, price), (quote['stock'], 120.48, 121.2, (120.48 + 121.2) / 2))
++
+ 
+   def test_getDataPoint_calculatePriceBidGreaterThanAsk(self):
+     quotes = [
+@@ -15,6 +20,11 @@ class ClientTest(unittest.TestCase):
+       {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
+     ]
+     """ ------------ Add the assertion below ------------ """
++     # Call getDataPoint for each quote and assert the returned tuple
++    for quote in quotes:
++            stock, bid_price, ask_price, price = getDataPoint(quote)
++            self.assertEqual((stock, bid_price, ask_price, price), (quote['stock'], 120.48, 119.2, (120.48 + 119.2) / 2))
++
+ 
+ 
+   """ ------------ Add more unit tests ------------ """
+-- 
+2.42.0.windows.2
+
